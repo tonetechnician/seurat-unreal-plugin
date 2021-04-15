@@ -16,7 +16,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#if ENGINE_MINOR_VERSION > 24
+#include "Framework/Commands/Commands.h"
+#else
 #include "Commands/Commands.h"
+#endif
 #include "SeuratStyle.h"
 
 class FSeuratCommands : public TCommands<FSeuratCommands>

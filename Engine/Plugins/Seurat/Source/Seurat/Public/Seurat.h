@@ -19,10 +19,15 @@
 #include "Dom/JsonObject.h"
 #include "Engine/EngineBaseTypes.h"
 #include "Framework/Commands/UICommandList.h"
-#include "ModuleManager.h"
 #include "HighResScreenshot.h"
 #include "TextureResource.h"
 #include "SceneCaptureSeurat.h"
+#if ENGINE_MINOR_VERSION > 24
+#include "Components/SceneCaptureComponent2D.h"
+#include "Modules/ModuleManager.h"
+#else
+#include "ModuleManager.h"
+#endif
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -39,7 +44,11 @@ public:
 	void BeginCapture(ASceneCaptureSeurat* InCaptureCamera);
 	void EndCapture();
 	void CancelCapture();
+#if ENGINE_MINOR_VERSION > 24
+	void Tick(UWorld* world, ELevelTick TickType, float DeltaSeconds);
+#else
 	void Tick(ELevelTick TickType, float DeltaSeconds);
+#endif
 
 	// Fields related to capture process.
 	TArray<FVector> Samples;

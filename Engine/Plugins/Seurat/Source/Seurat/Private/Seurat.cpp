@@ -26,6 +26,11 @@
 #include "SeuratStyle.h"
 #include "SeuratCommands.h"
 
+#if ENGINE_MINOR_VERSION > 24
+#include "ImageWriteTask.h"
+#include "ImageWriteQueue.h"
+#endif
+
 #if WITH_EDITOR
 #include "Editor.h"
 #include "Editor/EditorPerProjectUserSettings.h"
@@ -33,8 +38,11 @@
 #include "LevelEditor.h"
 #include "Kismet/GameplayStatics.h"
 #endif // WITH_EDITOR
-
+#if ENGINE_MINOR_VERSION > 24
+static const FString kSeuratOutputDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectIntermediateDir() / "SeuratCapture");
+#else
 static const FString kSeuratOutputDir = FPaths::ConvertRelativePathToFull(FPaths::GameIntermediateDir() / "SeuratCapture");
+#endif
 static const int32 kTimerExpirationsPerCapture = 4;
 
 #define LOCTEXT_NAMESPACE "FSeuratModule"
@@ -174,7 +182,11 @@ void FSeuratModule::AddToolbarExtension(FToolBarBuilder& Builder)
 {
 }
 
+#if ENGINE_MINOR_VERSION > 24
+void FSeuratModule::Tick(UWorld* world, ELevelTick TickType, float DeltaSeconds)
+#else
 void FSeuratModule::Tick(ELevelTick TickType, float DeltaSeconds)
+#endif
 {
 	if (CurrentSample < 0)
 	{
@@ -504,7 +516,34 @@ void FSeuratModule::WriteImage(UTextureRenderTarget2D* InRenderTarget, FString F
 	FString ResultPath;
 	FHighResScreenshotConfig& HighResScreenshotConfig = GetHighResScreenshotConfig();
 	HighResScreenshotConfig.bCaptureHDR = true;
-	HighResScreenshotConfig.SaveImage(Filename, OutBMP, DestSize);
+	//HighResScreenshotConfig.SaveImage(Filename, OutBMP, DestSize);
+
+	// FOLLOWING CODE FROM: https://forums.unrealengine.com/t/recommended-way-to-replace-the-fhighresolutionscreenshotconfig-saveimage-in-4-21/120551
+	// Check to see if ImageWriteQueue has been initialised
+	if (!ensureMsgf(HighResScreenshotConfig.ImageWriteQueue, TEXT("Unable to write images unless FHighResScreenshotConfig::Init has been called.")))
+	{
+		// Do something
+	}
+
+	// Create ImageTask
+	TUniquePtr<FImageWriteTask> ImageTask = MakeUnique<FImageWriteTask>();
+
+	// Pass bitmap to pixeldata
+	ImageTask->PixelData = MakeUnique<TImagePixelData<FLinearColor>>(DestSize, (TArray<FLinearColor, FDefaultAllocator64>) MoveTemp(OutBMP));
+
+	// Populate Task with config data
+	HighResScreenshotConfig.PopulateImageTaskParams(*ImageTask);
+	ImageTask->Filename = Filename;
+
+	// Specify HDR as output format
+	ImageTask->Format = EImageFormat::EXR;
+
+	// Save the bitmap to disc
+	TFuture<bool> CompletionFuture = HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask));
+	if (CompletionFuture.IsValid())
+	{
+		CompletionFuture.Wait();
+	}
 }
 
 bool FSeuratModule::SaveStringTextToFile(FString SaveDirectory, FString FileName, FString SaveText, bool AllowOverWriting)

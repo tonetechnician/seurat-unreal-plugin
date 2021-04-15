@@ -14,9 +14,14 @@
 */
 
 #include "SeuratStyle.h"
-#include "SlateGameResources.h"
 #include "Styling/SlateStyleRegistry.h"
+#if ENGINE_MINOR_VERSION > 24
+#include "Slate/SlateGameResources.h"
+#include "Interfaces/IPluginManager.h"
+#else
+#include "SlateGameResources.h"
 #include "IPluginManager.h"
+#endif
 
 TSharedPtr< FSlateStyleSet > FSeuratStyle::StyleInstance = NULL;
 

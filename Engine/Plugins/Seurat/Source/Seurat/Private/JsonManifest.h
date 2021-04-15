@@ -18,6 +18,9 @@
 #include "CoreMinimal.h"
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
+#if ENGINE_MINOR_VERSION > 24
+#include "Serialization/JsonSerializer.h"
+#endif
 
 static TArray<TSharedPtr<FJsonValue>> MatrixToJsonArray(FMatrix Matrix)
 {

@@ -19,12 +19,15 @@ public class Seurat : ModuleRules
 {
 	public Seurat(ReadOnlyTargetRules Target) : base(Target)
 	{
-			PublicIncludePaths.AddRange(
-			new string[] {
+#if UE_4_24_OR_LATER
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+#endif
+        PublicIncludePaths.AddRange(
+            new string[] {
 				"Seurat/Public"
 				// ... add public include paths required here ...
 			}
-			);
+		);
 
 
 		PrivateIncludePaths.AddRange(
@@ -41,7 +44,7 @@ public class Seurat : ModuleRules
 				"Core",
 				// ... add other public dependencies that you statically link with here ...
 			}
-			);
+		);
 
 
 		PrivateDependencyModuleNames.AddRange(
@@ -56,10 +59,14 @@ public class Seurat : ModuleRules
 				"Slate",
 				"SlateCore",
 				"Json",
-				"PropertyEditor",
+#if UE_4_24_OR_LATER
+				"ImageWriteQueue",
+				"JsonUtilities",
+#endif
+                "PropertyEditor",
 				// ... add private dependencies that you statically link with here ...
 			}
-			);
+		);
 
 
 		DynamicallyLoadedModuleNames.AddRange(
@@ -67,6 +74,6 @@ public class Seurat : ModuleRules
 			{
 				// ... add any modules that your module loads dynamically here ...
 			}
-			);
+		);
 	}
 }
