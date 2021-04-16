@@ -516,8 +516,9 @@ void FSeuratModule::WriteImage(UTextureRenderTarget2D* InRenderTarget, FString F
 	FString ResultPath;
 	FHighResScreenshotConfig& HighResScreenshotConfig = GetHighResScreenshotConfig();
 	HighResScreenshotConfig.bCaptureHDR = true;
-	//HighResScreenshotConfig.SaveImage(Filename, OutBMP, DestSize);
-
+#if ENGINE_MINOR_VERSION <= 24
+	HighResScreenshotConfig.SaveImage(Filename, OutBMP, DestSize);
+#else
 	// FOLLOWING CODE FROM: https://forums.unrealengine.com/t/recommended-way-to-replace-the-fhighresolutionscreenshotconfig-saveimage-in-4-21/120551
 	// Check to see if ImageWriteQueue has been initialised
 	if (!ensureMsgf(HighResScreenshotConfig.ImageWriteQueue, TEXT("Unable to write images unless FHighResScreenshotConfig::Init has been called.")))
@@ -544,6 +545,7 @@ void FSeuratModule::WriteImage(UTextureRenderTarget2D* InRenderTarget, FString F
 	{
 		CompletionFuture.Wait();
 	}
+#endif
 }
 
 bool FSeuratModule::SaveStringTextToFile(FString SaveDirectory, FString FileName, FString SaveText, bool AllowOverWriting)
